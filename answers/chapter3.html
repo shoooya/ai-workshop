@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>オセロゲーム</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            background-color: #f0f0f0;
+        }
+
+        .game-container {
+            text-align: center;
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .board {
+            display: grid;
+            grid-template-columns: repeat(8, 60px);
+            grid-template-rows: repeat(8, 60px);
+            gap: 2px;
+            background-color: #228B22;
+            padding: 10px;
+            border-radius: 10px;
+            margin: 20px auto;
+        }
+
+        .cell {
+            width: 60px;
+            height: 60px;
+            background-color: #228B22;
+            border: 2px solid #006400;
+            border-radius: 5px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .cell:hover {
+            background-color: #32CD32;
+        }
+
+        .piece {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            border: 2px solid #333;
+            transition: all 0.3s ease;
+        }
+
+        .black {
+            background-color: #333;
+        }
+
+        .white {
+            background-color: #fff;
+        }
+
+        .valid-move {
+            background-color: #90EE90 !important;
+        }
+
+        .game-info {
+            margin: 20px 0;
+        }
+
+        .score {
+            display: flex;
+            justify-content: space-around;
+            margin: 10px 0;
+        }
+
+        .score-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .score-piece {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            border: 2px solid #333;
+        }
+
+        .current-player {
+            font-size: 18px;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+
+        .reset-button {
+            padding: 10px 20px;
+            font-size: 16px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+
+        .reset-button:hover {
+            background-color: #45a049;
+        }
+
+        .game-over {
+            background-color: #ffebcd;
+            padding: 20px;
+            margin: 10px 0;
+            border-radius: 5px;
+            font-size: 18px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <h1>オセロゲーム</h1>
+        
+        <div class="game-info">
+            <div class="current-player" id="currentPlayer">現在のプレイヤー: 黒</div>
+            
+            <div class="score">
+                <div class="score-item">
+                    <div class="score-piece black"></div>
+                    <span>黒: <span id="blackScore">2</span></span>
+                </div>
+                <div class="score-item">
+                    <div class="score-piece white"></div>
+                    <span>白: <span id="whiteScore">2</span></span>
+                </div>
+            </div>
+        </div>
+
+        <div class="board" id="board"></div>
+
+        <div id="gameOver" class="game-over" style="display: none;"></div>
+
+        <button class="reset-button" onclick="resetGame()">ゲームリセット</button>
+        <button class="reset-button" id="passButton" onclick="handlePass()">パス</button>
+        <button class="reset-button" onclick="setPassDebugBoard()">パス発生盤面セット</button>
+    </div>
+
+    <script>
+        // ゲーム状態の管理
+        let board = [];
+        let currentPlayer = 1; // 1: 黒, -1: 白
+        let gameOver = false;
+
+        // ボードの初期化
+        function initBoard() {
+            // TODO: Cursorで補完してもらうポイント1
+            // 8x8の二次元配列を初期化（0: 空, 1: 黒, -1: 白）
+            board = Array(8).fill(null).map(() => Array(8).fill(0));
+            
+            // 初期配置: 中央に黒と白を2個ずつ配置
+            board[3][3] = -1; // 白
+            board[3][4] = 1;  // 黒
+            board[4][3] = 1;  // 黒
+            board[4][4] = -1; // 白
+            
+            currentPlayer = 1; // 黒から開始
+            gameOver = false;
+        }
+
+        // ボードの描画
+        function renderBoard() {
+            const boardElement = document.getElementById('board');
+            boardElement.innerHTML = '';
+
+            for (let row = 0; row < 8; row++) {
+                for (let col = 0; col < 8; col++) {
+                    const cell = document.createElement('div');
+                    cell.className = 'cell';
+                    cell.dataset.row = row;
+                    cell.dataset.col = col;
+
+                    // TODO: Cursorで補完してもらうポイント2
+                    // セルクリック時のイベントリスナーを追加
+                    cell.addEventListener('click', () => handleCellClick(row, col));
+
+                    // 駒の表示
+                    if (board[row][col] !== 0) {
+                        const piece = document.createElement('div');
+                        piece.className = `piece ${board[row][col] === 1 ? 'black' : 'white'}`;
+                        cell.appendChild(piece);
+                    }
+
+                    // 有効な手の表示
+                    if (isValidMove(row, col, currentPlayer)) {
+                        cell.classList.add('valid-move');
+                    }
+
+                    boardElement.appendChild(cell);
+                }
+            }
+
+            updateScore();
+            updateCurrentPlayer();
+        }
+
+        // セルクリック時の処理
+        function handleCellClick(row, col) {
+            if (gameOver || board[row][col] !== 0 || !isValidMove(row, col, currentPlayer)) {
+                return;
+            }
+
+            // TODO: Cursorで補完してもらうポイント3
+            // 駒を置いて、挟まれた駒をひっくり返す処理
+            makeMove(row, col, currentPlayer);
+            
+            // プレイヤー交代
+            currentPlayer *= -1;
+            
+            // 次のプレイヤーが打てる手があるかチェック
+            if (!hasValidMoves(currentPlayer)) {
+                currentPlayer *= -1; // 元のプレイヤーに戻す
+                if (!hasValidMoves(currentPlayer)) {
+                    // 両プレイヤーが打てない場合、ゲーム終了
+                    endGame();
+                    return;
+                }
+            }
+
+            renderBoard();
+        }
+
+        // 有効な手かどうかをチェック
+        function isValidMove(row, col, player) {
+            if (board[row][col] !== 0) return false;
+
+            // TODO: Cursorで補完してもらうポイント4
+            // 8方向をチェックして、挟める駒があるかどうかを判定
+            const directions = [
+                [-1, -1], [-1, 0], [-1, 1],
+                [0, -1],           [0, 1],
+                [1, -1],  [1, 0],  [1, 1]
+            ];
+
+            for (let [dx, dy] of directions) {
+                if (checkDirection(row, col, dx, dy, player)) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        // 指定方向に挟める駒があるかチェック
+        function checkDirection(row, col, dx, dy, player) {
+            let x = row + dx;
+            let y = col + dy;
+            let hasOpponent = false;
+
+            while (x >= 0 && x < 8 && y >= 0 && y < 8) {
+                if (board[x][y] === 0) {
+                    return false; // 空のセルに到達
+                }
+                if (board[x][y] === -player) {
+                    hasOpponent = true; // 相手の駒を発見
+                } else if (board[x][y] === player) {
+                    return hasOpponent; // 自分の駒に到達、相手の駒があれば有効
+                }
+                x += dx;
+                y += dy;
+            }
+            return false;
+        }
+
+        // 駒を置いて挟んだ駒をひっくり返す
+        function makeMove(row, col, player) {
+            board[row][col] = player;
+
+            // TODO: Cursorで補完してもらうポイント5
+            // 8方向をチェックして、挟んだ駒をすべてひっくり返す
+            const directions = [
+                [-1, -1], [-1, 0], [-1, 1],
+                [0, -1],           [0, 1],
+                [1, -1],  [1, 0],  [1, 1]
+            ];
+
+            for (let [dx, dy] of directions) {
+                if (checkDirection(row, col, dx, dy, player)) {
+                    flipPieces(row, col, dx, dy, player);
+                }
+            }
+        }
+
+        // 指定方向の駒をひっくり返す
+        function flipPieces(row, col, dx, dy, player) {
+            let x = row + dx;
+            let y = col + dy;
+
+            while (x >= 0 && x < 8 && y >= 0 && y < 8) {
+                if (board[x][y] === -player) {
+                    board[x][y] = player; // 駒をひっくり返す
+                } else if (board[x][y] === player) {
+                    break; // 自分の駒に到達したので終了
+                }
+                x += dx;
+                y += dy;
+            }
+        }
+
+        // プレイヤーに有効な手があるかチェック
+        function hasValidMoves(player) {
+            // TODO: Cursorで補完してもらうポイント6
+            // 全てのセルをチェックして有効な手があるかどうかを判定
+            for (let row = 0; row < 8; row++) {
+                for (let col = 0; col < 8; col++) {
+                    if (isValidMove(row, col, player)) {
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
+
+        // スコアの更新
+        function updateScore() {
+            let blackCount = 0;
+            let whiteCount = 0;
+
+            // TODO: Cursorで補完してもらうポイント7
+            // ボード上の駒を数える
+            for (let row = 0; row < 8; row++) {
+                for (let col = 0; col < 8; col++) {
+                    if (board[row][col] === 1) blackCount++;
+                    else if (board[row][col] === -1) whiteCount++;
+                }
+            }
+
+            document.getElementById('blackScore').textContent = blackCount;
+            document.getElementById('whiteScore').textContent = whiteCount;
+        }
+
+        // 現在のプレイヤー表示の更新
+        function updateCurrentPlayer() {
+            const playerName = currentPlayer === 1 ? '黒' : '白';
+            document.getElementById('currentPlayer').textContent = `現在のプレイヤー: ${playerName}`;
+        }
+
+        // ゲーム終了処理
+        function endGame() {
+            gameOver = true;
+            const blackScore = parseInt(document.getElementById('blackScore').textContent);
+            const whiteScore = parseInt(document.getElementById('whiteScore').textContent);
+            
+            let message;
+            if (blackScore > whiteScore) {
+                message = `ゲーム終了！ 黒の勝利！ (黒: ${blackScore}, 白: ${whiteScore})`;
+            } else if (whiteScore > blackScore) {
+                message = `ゲーム終了！ 白の勝利！ (黒: ${blackScore}, 白: ${whiteScore})`;
+            } else {
+                message = `ゲーム終了！ 引き分け！ (黒: ${blackScore}, 白: ${whiteScore})`;
+            }
+
+            document.getElementById('gameOver').textContent = message;
+            document.getElementById('gameOver').style.display = 'block';
+        }
+
+        // ゲームリセット
+        function resetGame() {
+            document.getElementById('gameOver').style.display = 'none';
+            // TODO: ゲームリセットの処理を追加
+            initBoard();
+            renderBoard();
+        }
+
+        // パス処理
+        function handlePass() {
+            if (gameOver) return;
+            // 現在のプレイヤーに有効な手がある場合はパスできない
+            if (hasValidMoves(currentPlayer)) {
+                alert('有効な手があるためパスできません');
+                return;
+            }
+            // 手番交代
+            currentPlayer *= -1;
+            // 相手にも有効な手がなければ終了
+            if (!hasValidMoves(currentPlayer)) {
+                endGame();
+                return;
+            }
+            renderBoard();
+        }
+
+        // パス発生デバッグ用盤面セット
+        function setPassDebugBoard() {
+            // 例：黒に有効手がなく、白には有効手がある盤面
+            board = [
+                [ 1,  1,  1,  1,  1,  1,  1,  1],
+                [ 1, -1, -1, -1, -1, -1, -1,  1],
+                [ 1, -1,  1,  1,  1,  1, -1,  1],
+                [ 1, -1,  1,  0,  0,  1, -1,  1],
+                [ 1, -1,  1,  0,  0,  1, -1,  1],
+                [ 1, -1,  1,  1,  1,  1, -1,  1],
+                [ 1, -1, -1, -1, -1, -1, -1,  1],
+                [ 1,  1,  1,  1,  1,  1,  1,  1],
+            ];
+            currentPlayer = 1; // 黒番
+            gameOver = false;
+            document.getElementById('gameOver').style.display = 'none';
+            renderBoard();
+        }
+
+        // ゲーム開始
+        initBoard();
+        renderBoard();
+    </script>
+</body>
+</html>
