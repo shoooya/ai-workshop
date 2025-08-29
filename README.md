@@ -68,23 +68,17 @@
 2. **バグのある箇所を見つける**
    ```javascript
    function resetGame() {
-       // TODO: ゲーム終了メッセージを非表示にする処理が抜けている
-       initBoard();
-       renderBoard();
+      document.getElementById('gameOver').style.display = 'none';
+      // TODO: ゲームリセットの処理を追加
    }
    ```
 
 3. **AIに修正してもらう**
-   - TODOコメントの下で `document.getElementById` と入力開始
-   - Cursorが `gameOver` 要素を非表示にする処理を提案してくれる
+   - TODOコメントの行の末尾で改行を入力
+   - Cursorの提案を確認
    - `Tab` キーで補完を受け入れ
 
-4. **期待される修正結果**
-   ```javascript
-   document.getElementById('gameOver').style.display = 'none';
-   ```
-
-5. **修正確認**
+4. **修正確認**
    - ファイルを保存（Ctrl+S）
    - ブラウザを更新してバグが修正されたか確認
 
@@ -93,83 +87,38 @@
 **目標**: パス機能を追加する（打てる手がない時にパスできる機能）
 
 #### 実装手順
-1. **HTMLにパスボタンを追加**
-   - ゲームリセットボタンの上に以下を追加：
-   ```html
-   <button class="reset-button" id="passButton" onclick="passMove()">パス</button>
-   ```
+1. cursor上でAIにパス機能実装を指示
 
-2. **JavaScriptにパス関数を追加**
-   - AIに `passMove` 関数の実装を提案してもらう
-   - ヒント: 「現在のプレイヤーを交代して、次のプレイヤーに手番を渡す」
+2. 実装された内容を確認しながら承認
 
-3. **Cursorでの補完体験**
-   ```javascript
-   // パス機能の実装
-   function passMove() {
-       // TODO: Cursorに「プレイヤー交代とメッセージ表示」を提案してもらう
-   }
-   ```
-
-4. **期待される補完結果**
-   - プレイヤー交代の処理
-   - 「○○がパスしました」のメッセージ表示
-   - ボードの再描画
+3. **修正確認**
+   - ファイルを保存（Ctrl+S）
+   - ブラウザを更新してバグが修正されたか確認
 
 ### 課題3: 体験改善 🎮 【難易度: ★★★】
 
-**目標**: 駒をひっくり返すアニメーションを改良する
+**目標**: パスが発生する盤面を自動生成できる
 
 #### 現在の状況
-- 駒を置いた時のアニメーションは既に実装済み
-- でも、ひっくり返される駒にはアニメーションがない
+- 自身でパスが発生する場面までゲームを進めないと動作確認ができない
 
 #### 改良手順
-1. **CSSに回転アニメーションを追加**
-   ```css
-   .piece-flip {
-       animation: flipAnimation 0.5s ease-in-out;
-   }
-   
-   @keyframes flipAnimation {
-       0% { transform: rotateY(0deg); }
-       50% { transform: rotateY(90deg); }
-       100% { transform: rotateY(0deg); }
-   }
+1. **ボタンの追加**
+   以下をゲームリセットボタン付近に追加
+   ```html
+   <button class="reset-button" onclick="setPassDebugBoard()">パス発生盤面セット</button>
    ```
 
-2. **JavaScriptでアニメーション適用**
-   - `flipPieces` 関数を見つける
-   - AIに「ひっくり返される駒にアニメーションクラスを適用する」処理を提案してもらう
-
-3. **Cursorでの補完体験**
-   ```javascript
-   function flipPieces(row, col, dx, dy, player) {
-       let x = row + dx;
-       let y = col + dy;
-
-       while (x >= 0 && x < 8 && y >= 0 && y < 8) {
-           if (board[x][y] === -player) {
-               board[x][y] = player;
-               // TODO: ここでアニメーション効果を追加
-           } else if (board[x][y] === player) {
-               break;
-           }
-           x += dx;
-           y += dy;
-       }
-   }
+2. **実装する内容をコメントで記載** 
+   - パスを実行するfunctionの下に次のコメントを追加
+   ```html
+   コメントする内容は自分で考えてみてください
    ```
 
-## ⏰ ワークショップの時間配分
+3. **Cursorで補完しながら実装**
+   - コメント入れた行の末尾に改行を追記
+   - 補完内容を確認しながらtabで承認
 
-- **環境設定**: 10分
-- **課題1（バグ修正）**: 10分
-- **課題2（機能追加）**: 15分  
-- **課題3（体験改善）**: 10分
-- **自由改造・質疑応答**: 10分
-
-**合計**: 55分
 
 ## 💡 AI補完のコツ
 
