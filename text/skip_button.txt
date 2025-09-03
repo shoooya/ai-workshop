@@ -1,0 +1,1 @@
+<button class="reset-button" onclick="setPassDebugBoard()">パス発生盤面セット</button>
